@@ -13,3 +13,6 @@ search:
     3. filter
 
 insert: pass through embeddings and store as np array
+
+embeddings: fse, OpenAI, or BERT
+fse does not work on a macbook and I am not falling prey to OpenAI so BERT it is

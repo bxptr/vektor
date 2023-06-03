@@ -1,0 +1,5 @@
+numpy
+transformers
+torch
+
+urllib3==1.26.6 # for some reason urllib3 doesn't like my macbok so i downgraded for transformers

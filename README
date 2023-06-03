@@ -1,4 +1,19 @@
 vektor
 -----
 
-idk what this is right now but i'll hopefully be sure by the next time you drop by (you will drop by right?)
+a mini vector database implementation that intends to be educational and interpretable
+
+many current vector database implementations are focused on monetization and open source
+implementations tend to be quite sprawling. a vector database is not a complex project 
+and this implementation of the core concepts is done ridiculously small. of course, currently,
+this is a bare-bones version, and I will add more production-level concepts to the project
+as time goes on. 
+
+needless to say, the implementation did not come intuitively and I referenced the following sources:
+
+1. https://www.pinecone.io/learn/vector-database/
+2. https://www.pinecone.io/learn/vector-similarity/
+
+* yes i too find it hilarous that i referenced a vector database provider to make a vector database *
+
+some notes and ideas as well as general comments can be found in `notes`
