@@ -1,5 +1,5 @@
 venv/
+*.egg-info/
 
 db.bin
 
-db.bin
