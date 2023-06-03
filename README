@@ -7,7 +7,12 @@ many current vector database implementations are focused on monetization and ope
 implementations tend to be quite sprawling. a vector database is not a complex project 
 and this implementation of the core concepts is done ridiculously small. of course, currently,
 this is a bare-bones version, and I will add more production-level concepts to the project
-as time goes on. 
+as time goes on.
+
+currently, the implementation uses BERT for the embeddings model and euclidean distance for the
+similarity measure and brute forces the best vectors by iterating through them all and ranking
+by similarity. this was just to make a MVP of sorts and I have plans to make this somewhat
+functional.
 
 needless to say, the implementation did not come intuitively and I referenced the following sources:
 
