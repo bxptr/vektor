@@ -1,0 +1,15 @@
+notes
+-----
+
+* just making sense of what a vector database is and algorithms *
+
+index algo: RP (random projection) or LSH (locality-sensitive hashing)
+similarity algo: dot product (for RP) or eucldean (for LSH)
+filtering: post-filtering
+
+search:
+    1. embedding fn/model
+    2. rank based on similarity
+    3. filter
+
+insert: pass through embeddings and store as np array
