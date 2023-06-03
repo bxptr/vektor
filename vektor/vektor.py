@@ -2,6 +2,9 @@ import numpy as np
 import transformers
 import pickle
 
+import vektor.lsh
+import vektor.distance
+
 import torch # yes, this is just for type-checking
 
 tokenizer = transformers.AutoTokenizer.from_pretrained("bert-base-uncased")
@@ -18,49 +21,29 @@ def bert_embedding(sentence: str) -> torch.Tensor:
     outputs = model(**inputs)
     return outputs.last_hidden_state.detach()
 
-def euclidean(vectors: np.array, query: np.array) -> list:
-    #distances = np.empty((1, 100, 768), dtype = np.float32)
-    #for i, v in enumerate(vectors):
-        #dist = np.sqrt(np.sum((a - b) ** 2 for a, b in zip(v, query)))
-        #distances = np.vstack((distances, dist))
-    return [np.linalg.norm(query - vec) for vec in vectors]
-
 class Vektor:
     def __init__(
         self,
         vectors: np.array = np.empty((1, 100, 768), dtype = np.float32),
         embedding: object = bert_embedding,
-        similarity: object = euclidean
+        distance: object = vektor.distance.cosine
     ) -> None:
-        self.vectors = vectors
         self.embedding = embedding
-        self.similarity = similarity
-        self.references = []
+        self.distance = distance
+        self.lsh = vektor.lsh.LSH(1 * 100 * 768)
 
-    def from_source(self, source: list) -> None:
+    def from_source(self, source: list, key_fn: object = lambda x: x) -> None:
         for ref in source:
-            print("from_source:", self.vectors.shape)
-            vector = np.array(self.embedding(ref["info"]["description"])).astype(np.float32)
-            self.vectors = np.vstack((self.vectors, vector))
-            self.references.append(ref)
+            vector = np.array(self.embedding(key_fn(ref))).astype(np.float32)
+            self.lsh.index(vector, ref)
 
     def save(self, filename: str) -> None:
         with open(filename, "wb") as handler:
-            pickle.dump({
-                "vectors": self.vectors,
-                "references": self.references
-            }, handler)
+            pickle.dump(self.lsh, handler)
 
     def load(self, filename: str) -> None:
         with open(filename, "rb") as handler:
-            data = pickle.load(handler)
-        self.vectors = data["vectors"].astype(np.float32)
-        self.references = data["references"]
+            self.lsh = pickle.load(handler)
 
-    def query(self, query: str, top_k: int = 5) -> list:
-        vector = np.array(self.embedding(query))
-        similarities = self.similarity(self.vectors, vector)
-        table = {j: i for i, j in enumerate(similarities)}
-        similarities.sort(reverse = True)
-        top = [self.references[table[i] - 1] for i in similarities][:top_k]
-        return top
+    def query(self, vector: str, top_k: int = 5) -> list:
+        return self.lsh.query(vector, top_k, self.distance)

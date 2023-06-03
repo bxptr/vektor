@@ -1,5 +1,7 @@
 venv/
 *.egg-info/
 
+*.swp
+
 db.bin
 

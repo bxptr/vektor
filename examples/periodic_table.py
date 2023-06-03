@@ -17,7 +17,7 @@ database = vektor.Vektor()
 if os.path.isfile("db.bin"):
     database.load("db.bin")
 else:
-    database.from_source(source)
+    database.from_source(source, lambda x: x["summary"])
     database.save("db.bin")
 
 end = time.time()
