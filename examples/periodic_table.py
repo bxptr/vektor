@@ -5,7 +5,7 @@ import os.path
 import time
 
 source = []
-with open("periodic_table.json") as handler:
+with open("./examples/references/periodic_table.json") as handler:
     table = json.load(handler)
     for element in table["elements"]:
         source.append(element)
