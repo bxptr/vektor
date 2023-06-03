@@ -1,12 +1,14 @@
 import numpy as np
 import transformers
 import pickle
+import tqdm
 
 import vektor.lsh
 import vektor.distance
 
 import torch # yes, this is just for type-checking
 
+transformers.logging.set_verbosity_error() # i just don't like the message
 tokenizer = transformers.AutoTokenizer.from_pretrained("bert-base-uncased")
 model = transformers.BertModel.from_pretrained("bert-base-uncased")
 
@@ -33,9 +35,10 @@ class Vektor:
         self.lsh = vektor.lsh.LSH(1 * 100 * 768)
 
     def from_source(self, source: list, key_fn: object = lambda x: x) -> None:
-        for ref in source:
+        for ref in (bar := tqdm.tqdm(source)):
             vector = np.array(self.embedding(key_fn(ref))).astype(np.float32)
             self.lsh.index(vector, ref)
+            bar.set_description("from_source")
 
     def save(self, filename: str) -> None:
         with open(filename, "wb") as handler:
@@ -45,5 +48,6 @@ class Vektor:
         with open(filename, "rb") as handler:
             self.lsh = pickle.load(handler)
 
-    def query(self, vector: str, top_k: int = 5) -> list:
+    def query(self, sentence: str, top_k: int = 5) -> list:
+        vector = np.array(self.embedding(sentence)).astype(np.float32)
         return self.lsh.query(vector, top_k, self.distance)

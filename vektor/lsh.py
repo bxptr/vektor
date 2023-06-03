@@ -13,6 +13,9 @@ class MemoryStore:
     def append(self, key: object, value: object) -> None:
         self.store.setdefault(key, []).append(value)
 
+    def get(self, key: object) -> object:
+        return self.store.get(key, [])
+
 class LSH:
     def __init__(self, dims: int, num_tables: int = 1) -> None:
         self.dims = dims
@@ -22,7 +25,7 @@ class LSH:
         for i, table in enumerate(self.tables):
             table.append(generate_hash(self.dims, vector), (tuple(vector.tolist()), reference))
 
-    def query(self, vector: np.array, distance: object) -> list:
+    def query(self, vector: np.array, top_k: int, distance: object) -> list:
         possible = set()
         for i, table in enumerate(self.tables):
             possible.update(table.get(generate_hash(self.dims, vector)))
