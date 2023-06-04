@@ -50,10 +50,11 @@ class LSH:
 
     def query(self, vector: np.array, top_k: int, distance: object) -> list:
         possible = set()
+        hashed = generate_hash(self.dims, vector)
         for i, table in enumerate(self.tables):
             # here is the magic, we maximized collisions so each table should point to multiple vectors
             # we store all of the them into a set to remove duplicates
-            possible.update(table.get(generate_hash(self.dims, vector)))
+            possible.update(table.get(hashed))
         ranked = [(i, distance(vector, i)) for i in possible] # compute the distance between input and possible
         ranked.sort(key = lambda x: x[1]) # sort by distance
         return ranked[:top_k] # return the top k results
