@@ -17,8 +17,8 @@ def generate_hash(n_perms: int, vector: np.array) -> np.array:
         (generator.randint(1, mersenne), generator.randint(0, mersenne))
         for _ in range(n_perms)
     ], np.uint64).T
-    sha = haslib.sha1(vector)
-    values = struct.unpack("<I", self.hashobj(sha).digest()[:4])[0]
+    sha = hashlib.sha1(vector).digest()
+    values = struct.unpack("<I", sha[:4])[0]
     a, b = permutations
     perm_values = np.bitwise_and((a * values + b) % mersenne, np.uint64(max_hash))
     return np.minimum(perm_values, np.ones(n_perms, np.uint64) * max_hash)
@@ -51,6 +51,7 @@ class LSH:
         self.b, self.r = self._optimal()
         self.tables = [collections.defaultdict(list) for _ in range(self.b)]
         self.ranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
+        self.swap = lambda x: bytes(x.byteswap().data)
 
     def _optimal(self) -> tuple:
         min_error = float("inf")
@@ -70,14 +71,14 @@ class LSH:
 
     def index(self, vector: np.array, reference: object) -> None:
         reference = json.dumps(reference)
-        self.store[reference] = [generate_hash(self.dims, vector)]
+        self.store[reference] = [self.swap(generate_hash(self.n_perms, vector)[s:e]) for s, e in self.ranges]
         for hash_, table in zip(self.store[reference], self.tables):
             table[hash_].append(reference)
 
     def query(self, vector: np.array) -> None:
         candidates = set()
         for (s, e), table in zip(self.ranges, self.tables):
-            hash_ = generate_hash(self.dims, vector)
+            hash_ = self.swap(generate_hash(self.dims, vector)[s:e])
             print(hash_)
             print(table.keys())
             if hash_ in table:
