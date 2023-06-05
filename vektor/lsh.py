@@ -1,5 +1,6 @@
 import numpy as np
 import collections
+import json
 
 def generate_hash(dims: int, vector: np.array) -> str:
     projections = np.dot(np.random.randn(64, dims), vector.flatten())
@@ -9,7 +10,7 @@ def integrate(fn: object, a: float, b: float) -> float:
     area = 0.0
     x = a
     while x < b:
-        area += f(x + 0.5 * 1e-3) * 1e-3
+        area += fn(x + 0.5 * 1e-3) * 1e-3
         x += 1e-3
     return area
 
@@ -18,13 +19,20 @@ class LSH:
     LSH (locality sensitive hashing) implementation)
     """
 
-    def __init__(self, threshold: float = 0.9, perms: int = 128, weights = (0.5, 0.5)) -> None:
+    def __init__(
+        self,
+        dims: int,
+        threshold: float = 0.9,
+        perms: int = 128,
+        weights = (0.5, 0.5)
+    ) -> None:
+        self.dims = dims
         self.threshold = threshold
         self.perms = perms
         self.weights = weights
         self.store = dict()
         self.b, self.r = self._optimal()
-        self.tables = [defaultdict(list) for _ in range(self.b)]
+        self.tables = [collections.defaultdict(list) for _ in range(self.b)]
         self.ranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
 
     def _optimal(self) -> tuple:
@@ -43,15 +51,17 @@ class LSH:
                     params = (b, r)
         return params
 
-    def index(self, vector: np.array, reference: str) -> None:
-        self.keys[reference] = [generate_hash(vector)[i:j] for i, j in self.ranges]
-        for hash_, table in zip(self.keys[reference], self.tables):
+    def index(self, vector: np.array, reference: object) -> None:
+        reference = json.dumps(reference)
+        self.store[reference] = generate_hash(self.dims, vector)
+        for hash_, table in zip(self.store[reference], self.tables):
             table[hash_].append(reference)
 
     def query(self, vector: np.array) -> None:
         candidates = set()
         for (s, e), table in zip(self.ranges, self.tables):
-            hash_ = generate_hash(vector[s:e])
+            hash_ = generate_hash(self.dims, vector)
+            print(table.keys())
             if hash_ in table:
                 for key in table[hash_]: candidates.add(key)
-        return list(candidates)
+        return [json.dumps(c) for c in list(candidates)]

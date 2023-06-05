@@ -1,6 +1,7 @@
 import numpy as np
 import transformers
 import pickle
+import tqdm
 
 import vektor.lsh
 import vektor.distance
@@ -38,16 +39,13 @@ class Vektor:
     ) -> None:
         self.embedding = embedding
         self.distance = distance
-        self.lsh = vektor.lsh.LSH(1 * 100 * 768) 
+        self.lsh = vektor.lsh.LSH(1 * 100 * 768)
 
     def from_source(self, source: list, key_fn: object = lambda x: x) -> None:
         for ref in (bar := tqdm.tqdm(source)):
             vector = np.array(self.embedding(key_fn(ref))).astype(np.float32)
             self.lsh.index(vector, ref)
             bar.set_description("from_source")
-        for ref in source:
-            vector = np.array(self.embedding(key_fn(ref))).astype(np.float32)
-            self.lsh.index(vector, ref)
 
     def save(self, filename: str) -> None:
         with open(filename, "wb") as handler:
@@ -59,4 +57,4 @@ class Vektor:
 
     def query(self, sentence: str, top_k: int = 5) -> list:
         vector = np.array(self.embedding(sentence)).astype(np.float32)
-        return self.lsh.query(vector, top_k, self.distance) 
+        return self.lsh.query(vector) 
