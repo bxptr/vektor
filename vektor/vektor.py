@@ -24,7 +24,7 @@ def bert_embedding(sentence: str) -> torch.Tensor:
         truncation = True
     )
     outputs = model(**inputs)
-    return outputs.last_hidden_state.detach()
+    return np.array(outputs.last_hidden_state.detach())
 
 class Vektor:
     """
@@ -43,7 +43,7 @@ class Vektor:
 
     def from_source(self, source: list, key_fn: object = lambda x: x) -> None:
         for ref in (bar := tqdm.tqdm(source)):
-            vector = np.array(self.embedding(key_fn(ref))).astype(np.float32)
+            vector = self.embedding(key_fn(ref)).astype(np.float32)
             self.lsh.index(vector, ref)
             bar.set_description("from_source")
 
@@ -56,5 +56,5 @@ class Vektor:
             self.lsh = pickle.load(handler)
 
     def query(self, sentence: str, top_k: int = 5) -> list:
-        vector = np.array(self.embedding(sentence)).astype(np.float32)
+        vector = self.embedding(sentence).astype(np.float32)
         return self.lsh.query(vector) 
