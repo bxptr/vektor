@@ -10,10 +10,7 @@ how the code works with comments throughout to explain what each section does.
 as an overview, the implemenation currently uses BERT as the embedding model, LSH to
 achive sub-linear time complexity on searches, and cosine distance to compare vectors.
 
-to start, read `vektor/vektor.py` and follow the comments to `vektor/lsh.py` and optionally
-view `vektor/distance.py`. this will guide you through decisions and implementation details.
-
-have fun!
+i like to think that my code is readable without many comments because of variable names.
 
 references:
 1. https://www.pinecone.io/learn/vector-database/
