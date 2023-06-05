@@ -1,6 +1,8 @@
 # vektor
 a mini vector database implementation that intends to be educational and interpretable
 
+** this project is not yet finished and under development **
+
 many current open source implementations tend to be sprawling and over-complicated and the
 general AI enthusiast cannot parse through the tens of files and hundreds of lines to learn.
 
