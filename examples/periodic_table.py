@@ -14,11 +14,11 @@ print("importing periodic table")
 start = time.time()
 
 database = vektor.Vektor()
-if os.path.isfile("db.bin"):
-    database.load("db.bin")
-else:
-    database.from_source(source, lambda x: x["summary"])
-    database.save("db.bin")
+#if os.path.isfile("db.bin"):
+#    database.load("db.bin")
+#else:
+database.from_source(source, lambda x: x["summary"])
+#database.save("db.bin")
 
 end = time.time()
 print(f"time: {(end - start) * 10 ** 3}ms")

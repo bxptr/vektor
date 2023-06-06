@@ -5,23 +5,9 @@ import random
 import collections
 import json
 
-generator = random.Random()
-generator.seed(1337)
-
 mersenne = (1 << 61) - 1
 max_hash = (1 << 32) - 1
 hash_range = (1 << 32)
-
-def generate_hash(n_perms: int, vector: np.array) -> np.array:
-    permutations = np.array([
-        (generator.randint(1, mersenne), generator.randint(0, mersenne))
-        for _ in range(n_perms)
-    ], np.uint64).T
-    sha = hashlib.sha1(vector).digest()
-    values = struct.unpack("<I", sha[:4])[0]
-    a, b = permutations
-    perm_values = np.bitwise_and((a * values + b) % mersenne, np.uint64(max_hash))
-    return np.minimum(perm_values, np.ones(n_perms, np.uint64) * max_hash)
 
 def integrate(fn: object, a: float, b: float) -> float:
     area = 0.0
@@ -38,22 +24,19 @@ class LSH:
 
     def __init__(
         self,
-        dims: int,
-        threshold: float = 0,
+        threshold: float = 0.1,
         n_perms: int = 128,
         weights = (0.5, 0.5)
     ) -> None:
-        self.dims = dims
-        self.threshold = threshold
         self.n_perms = n_perms
-        self.weights = weights
-        self.store = dict()
-        self.b, self.r = self._optimal()
-        self.tables = [collections.defaultdict(list) for _ in range(self.b)]
-        self.ranges = [(i * self.r, (i + 1) * self.r) for i in range(self.b)]
+        pos_weight, neg_weight = weights
+        b, r = self._optimal(threshold, pos_weight, neg_weight)
+        self.tables = [collections.defaultdict(list) for _ in range(b)]
+        self.ranges = [(i * r, (i + 1) * r) for i in range(b)]
         self.swap = lambda x: bytes(x.byteswap().data)
+        self.store = dict()
 
-    def _optimal(self) -> tuple:
+    def _optimal(self, threshold: float, pos_weight: float, neg_weight: float) -> tuple:
         min_error = float("inf")
         params = (0, 0)
         for b in range(1, self.n_perms + 1):
@@ -61,26 +44,35 @@ class LSH:
             for r in range(1, max_r + 1):
                 pos_prob_fn = lambda x: 1 - (1 - x ** float(r)) ** float(b)
                 neg_prob_fn = lambda x: 1 - (1 - (1 - x ** float(r)) ** float(b))
-                pos_prob = integrate(pos_prob_fn, 0.0, self.threshold)
-                neg_prob = integrate(neg_prob_fn, self.threshold, 1.0)
-                error = pos_prob * self.weights[0] + neg_prob * self.weights[1]
+                pos_prob = integrate(pos_prob_fn, 0.0, threshold)
+                neg_prob = integrate(neg_prob_fn, threshold, 1.0)
+                error = pos_prob * pos_weight + neg_prob * neg_weight
                 if error < min_error:
                     min_error = error
                     params = (b, r)
         return params
 
+    def _generate_hash(self, vector: np.array) -> None:
+        generator = random.Random(1337)
+        values = np.ones(self.n_perms, np.uint64) * max_hash
+        a, b = np.array([
+            (generator.randint(1, mersenne), generator.randint(0, mersenne))
+            for _ in range(self.n_perms)
+        ], np.uint64).T
+        unpacked = struct.unpack("<I", hashlib.sha1(vector.tobytes()).digest()[:4])[0]
+        return np.minimum(np.bitwise_and((a * values + b) % mersenne, np.uint64(max_hash)), values)
+
     def index(self, vector: np.array, reference: object) -> None:
         reference = json.dumps(reference)
-        self.store[reference] = [self.swap(generate_hash(self.n_perms, vector)[s:e]) for s, e in self.ranges]
+        self.store[reference] = [self.swap(self._generate_hash(vector)[s:e]) for s, e in self.ranges]
         for hash_, table in zip(self.store[reference], self.tables):
             table[hash_].append(reference)
 
     def query(self, vector: np.array) -> None:
         candidates = set()
         for (s, e), table in zip(self.ranges, self.tables):
-            hash_ = self.swap(generate_hash(self.dims, vector)[s:e])
-            print(hash_)
-            print(table.keys())
+            hash_ = self.swap(self._generate_hash(vector)[s:e])
             if hash_ in table:
-                for key in table[hash_]: candidates.add(key)
-        return [json.dumps(c) for c in list(candidates)]
+                for key in table[hash_]:
+                    candidates.add(key)
+        return list(candidates)
