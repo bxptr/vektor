@@ -9,11 +9,15 @@ mersenne = (1 << 61) - 1
 max_hash = (1 << 32) - 1
 hash_range = (1 << 32)
 
-def integrate(fn: object, a: float, b: float) -> float:
+def integrate(f: object, a: float, b: float) -> float:
+    """
+    integrate (area under the curve) of f(x)
+    """
+
     area = 0.0
     x = a
     while x < b:
-        area += fn(x + 0.5 * 1e-3) * 1e-3
+        area += f(x + 0.5 * 1e-3) * 1e-3
         x += 1e-3
     return area
 
