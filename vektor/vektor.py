@@ -39,7 +39,7 @@ class Vektor:
     ) -> None:
         self.embedding = embedding
         self.distance = distance
-        self.lsh = vektor.lsh.LSH(1 * 100 * 768)
+        self.lsh = vektor.lsh.LSH()
 
     def from_source(self, source: list, key_fn: object = lambda x: x) -> None:
         for ref in (bar := tqdm.tqdm(source)):
