@@ -28,9 +28,9 @@ class LSH:
 
     def __init__(
         self,
-        threshold: float = 0.1,
+        threshold: float = 0.9,
         n_perms: int = 128,
-        weights = (0.5, 0.5)
+        weights = (0.5, 0.5),
     ) -> None:
         self.n_perms = n_perms
         pos_weight, neg_weight = weights
@@ -73,7 +73,7 @@ class LSH:
         for hash_, table in zip(self.store[reference], self.tables):
             table[hash_].append(reference)
 
-    def query(self, vector: np.array) -> None:
+    def query(self, vector: np.array, distance: object, top_k: int) -> None:
         candidates = set()
         hashed = self._generate_hash(vector)
         for (s, e), table in zip(self.ranges, self.tables):
@@ -81,4 +81,6 @@ class LSH:
             if hash_ in table:
                 for key in table[hash_]:
                     candidates.add(key)
-        return list(candidates)
+        ranked = [(i, distance(vector, i)) for i in candidates]
+        ranked.sort(key = lambda x: x[1])
+        return [json.loads(i) for i in ranked[:top_k]]
