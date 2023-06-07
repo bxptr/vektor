@@ -29,6 +29,6 @@ end = time.time()
 print(f"time: {(end - start) * 10 ** 3}ms")
 
 for result in results:
-    result = json.loads(result)
     print("name:", result["name"], f"({result['symbol']})")
     print("summary:", result["summary"])
+    print("-" * 40)
