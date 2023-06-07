@@ -68,14 +68,16 @@ class LSH:
 
     def index(self, vector: np.array, reference: object) -> None:
         reference = json.dumps(reference)
-        self.store[reference] = [self.swap(self._generate_hash(vector)[s:e]) for s, e in self.ranges]
+        hashed = self._generate_hash(vector)
+        self.store[reference] = [self.swap(hashed[s:e]) for s, e in self.ranges]
         for hash_, table in zip(self.store[reference], self.tables):
             table[hash_].append(reference)
 
     def query(self, vector: np.array) -> None:
         candidates = set()
+        hashed = self._generate_hash(vector)
         for (s, e), table in zip(self.ranges, self.tables):
-            hash_ = self.swap(self._generate_hash(vector)[s:e])
+            hash_ = self.swap(hashed[s:e])
             if hash_ in table:
                 for key in table[hash_]:
                     candidates.add(key)
